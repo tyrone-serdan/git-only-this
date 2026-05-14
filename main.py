@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, Button, Tree, Static, Checkbox
-from textual.containers import Container, VerticalScroll, HorizontalScroll
+from textual.widgets import Header, Footer, Input, Button, Static, Checkbox
+from textual.containers import Container, VerticalScroll
 from textual import work, on
 from services import github_api as gha
 from services import downloader as d
