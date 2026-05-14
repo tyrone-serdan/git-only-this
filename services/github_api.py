@@ -1,4 +1,5 @@
 from github import Github
+import base64
 
 gh = Github()
 
@@ -36,3 +37,9 @@ def get_repo_filepaths(repo_link: str) -> list[str]:
             files.append(item.path)
 
     return files
+
+def download_file(repo_url: str, filepath: str):
+    repo = gh.get_repo(repo_url)
+    file = repo.get_contents(filepath)
+
+    return file

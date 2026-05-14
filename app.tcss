@@ -1,0 +1,62 @@
+Screen {
+    background: $background;
+}
+
+* {
+    scrollbar-color: $primary 10%;
+    scrollbar-color-hover: $primary 80%;
+    scrollbar-color-active: $primary;
+    scrollbar-background: $surface-darken-1;
+    scrollbar-background-hover: $surface-darken-1;
+    scrollbar-background-active: $surface-darken-1;
+    scrollbar-size-vertical: 1;
+}
+
+#sidebar {
+    dock: left;
+    width: auto;
+    max-width: 33%;
+    border-right: solid $primary;
+    background: $surface;
+}
+
+#file-tree {
+    height: 1fr;
+}
+
+Input {
+    border: none;
+    width: 1fr;
+    padding: 0 1;
+    height: 1;
+}
+
+Button {
+    padding: 1 2;
+    height: auto;
+    border: none;
+    margin: 0 0;
+    &:hover {
+        text-style: b;
+    }
+    &:disabled {
+        opacity: 40%;
+    }
+}
+
+#action-bar {
+    height: auto;
+    dock: bottom;
+    border-top: solid $primary;
+    padding: 1;
+    background: $surface;
+}
+
+Footer {
+    padding-left: 2;
+}
+
+#placeholder {
+    color: $text-muted;
+    hatch: right $surface-lighten-1 70%;
+}
