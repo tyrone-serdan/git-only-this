@@ -2,14 +2,14 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Input, Button, Static, Checkbox
 from textual.containers import Container, VerticalScroll
 from textual import work, on
-from services import github_api as gha
+from services.github_api import RepoFetcher
 from services import downloader as d
 
 
 class GitOnlyThis(App):
     CSS_PATH = "app.tcss"
     filepaths: list[str] = []
-    current_repo: str = ''
+    repo_fetcher: RepoFetcher | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -31,23 +31,25 @@ class GitOnlyThis(App):
             repo_input = self.query_one("#repo-input", Input)
             url = repo_input.value
 
-            self.current_repo = url
-            self._load_filepaths(url)
+            self.repo_fetcher = RepoFetcher(url)
+            self._load_filepaths()
             self.notify(message=f"loading: {url}")
         
-        if event.button.id == "download-btn":
-            self._download_files(self.current_repo, self.filepaths)
+        if event.button.id == "download-btn" and self.repo_fetcher:
+            self._download_files(self.repo_fetcher, self.filepaths)
 
     
     @work(thread=True)
-    def _load_filepaths(self, repo_url: str):
-        filepaths = gha.get_repo_filepaths(repo_url)
+    def _load_filepaths(self):
+        if not self.repo_fetcher:
+            return
+        filepaths = self.repo_fetcher.get_repo_filepaths()
         self.call_from_thread(self._populate_file_tree, filepaths)
 
 
     @work(thread=True)
-    def _download_files(self, repo_url: str, filepaths: list[str]) -> None:
-        d.download_files(repo_url, filepaths)
+    def _download_files(self, fetcher, filepaths: list[str]) -> None:
+        d.download_files(fetcher, filepaths)
         self.call_from_thread(self.notify, "Download complete!")
 
     def _populate_file_tree(self, filepaths: list[str]):
