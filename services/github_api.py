@@ -17,7 +17,13 @@ def parse_url(url: str) -> str:
 
     return parsed
 
+def get_file_content(repo_url: str, filepath: str) -> str:
+    repo = gh.get_repo(repo_url)
+    contents = repo.get_contents(filepath)
 
+    contents = contents.decoded_content.decode() # type: ignore
+
+    return contents
 
 def get_repo_filepaths(repo_link: str) -> list[str]:
     files: list[str] = []
