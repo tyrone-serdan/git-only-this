@@ -1,9 +1,10 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, Button, Static, Checkbox
+from textual.widgets import Header, Footer, Input, Button, Static, Checkbox, TextArea
 from textual.containers import Container, VerticalScroll
 from textual import work, on
 from services.github_api import RepoFetcher
 from services import downloader as d
+from services import utils
 
 
 class GitOnlyThis(App):
@@ -20,8 +21,7 @@ class GitOnlyThis(App):
             with VerticalScroll(id="file-tree"):
                 yield Static("Enter a repository URL to browse", id="placeholder")
         with Container(id="main-area"):
-            with VerticalScroll():
-                yield Static("Select files from the sidebar to see details", id="details")
+            yield TextArea(id="details", read_only=True)
         with Container(id="action-bar"):
             yield Button("Download Selected", id="download-btn", variant="primary")
         yield Footer()
@@ -63,15 +63,34 @@ class GitOnlyThis(App):
     @on(Checkbox.Changed)
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         checkbox = event.checkbox
-        
         is_checked = checkbox.value
 
-        if is_checked:
-            self.filepaths.append(checkbox.label._text)
-        else:
-            self.filepaths.remove(checkbox.label._text)
+        filepath = checkbox.label._text
 
-        self.notify(str(self.filepaths))
+        if is_checked:
+            self.filepaths.append(filepath)
+        else:
+            self.filepaths.remove(filepath)
+        
+        self._load_file_content(filepath)
+
+    @work(thread=True)
+    def _load_file_content(self, filepath: str) -> None:
+        if not self.repo_fetcher:
+            return
+        content = self.repo_fetcher.get_file_content(filepath)
+        self.call_from_thread(self._display_content, content, filepath)
+
+    def _display_content(self, content: str, filepath: str) -> None:
+        textarea = self.query_one("#details", TextArea)
+        language = utils.language_from_path(filepath)
+
+        if language and language in textarea.available_languages:
+            textarea.language = language
+        else:
+            textarea.language = None
+        
+        textarea.text = content
 
 if __name__ == "__main__":
     app = GitOnlyThis()
