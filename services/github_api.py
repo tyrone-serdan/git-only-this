@@ -1,5 +1,4 @@
 from github import Github
-import base64
 
 gh = Github()
 
