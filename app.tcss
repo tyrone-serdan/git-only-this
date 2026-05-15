@@ -12,6 +12,15 @@ Screen {
     scrollbar-size-vertical: 1;
 }
 
+#main-area {
+    width: 1fr;
+}
+
+TextArea#details {
+    height: 1fr;
+    border: none;
+}
+
 #sidebar {
     dock: left;
     width: auto;

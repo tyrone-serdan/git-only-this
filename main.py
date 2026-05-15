@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, Button, Static, Checkbox, TextArea
+from textual.widgets import Header, Footer, Input, Button, Static, Checkbox, TextArea, Collapsible
 from textual.containers import Container, VerticalScroll
 from textual import work, on
 from services.github_api import RepoFetcher
@@ -20,10 +20,13 @@ class GitOnlyThis(App):
             yield Static("\nFiles", id="files-header")
             with VerticalScroll(id="file-tree"):
                 yield Static("Enter a repository URL to browse", id="placeholder")
+
         with Container(id="main-area"):
             yield TextArea(id="details", read_only=True)
+
         with Container(id="action-bar"):
             yield Button("Download Selected", id="download-btn", variant="primary")
+
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -55,10 +58,45 @@ class GitOnlyThis(App):
     def _populate_file_tree(self, filepaths: list[str]):
         file_tree = self.query_one("#file-tree")
         file_tree.remove_children()
-        for path in filepaths:
-            file_tree.mount(Checkbox(path))
-        
+
+        tree = self._build_tree(filepaths)
+        widgets = self._build_collapsible_widgets(tree)
+
+        for widget in widgets:
+            file_tree.mount(widget)
+
         self.notify("loaded!")
+
+    def _build_tree(self, paths: list[str]) -> dict:
+        tree = {}
+        for path in sorted(paths):
+            parts = path.split("/")
+            current = tree
+
+            for i, part in enumerate(parts):
+                if part not in current:
+                    if i == len(parts) - 1:
+                        current[part] = None
+                    else:
+                        current[part] = {}
+                    
+                current = current[part]
+            
+        return tree
+
+    def _build_collapsible_widgets(self, tree: dict, prefix: str = "") -> list:
+        widgets = []
+        for key in sorted(tree, key=lambda k: (not isinstance(tree[k], dict), k)):
+            value = tree[key]
+            path = f"{prefix}{key}" if prefix else key
+
+            if value is None:
+                widgets.append(Checkbox(path))
+            else:
+                children = self._build_collapsible_widgets(value, f"{path}/")
+                widgets.append(Collapsible(*children, title=f"📁 {key}/"))
+        
+        return widgets
 
     @on(Checkbox.Changed)
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
